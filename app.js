@@ -1,41 +1,78 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require("http-errors");
+const express = require("express");
+const logger = require("morgan");
+const path = require("path");
+const okta = require("@okta/okta-sdk-nodejs");
+const session = require("express-session");
+const { ExpressOIDC } = require('@okta/oidc-middleware');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const auth = require("./auth");
+const blogRouter = require("./routes/blog");
+const usersRouter = require("./routes/users");
 
-var app = express();
+const app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "pug");
 
-app.use(logger('dev'));
+// Middleware
+app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+const oidc = new ExpressOIDC({
+  appBaseUrl: "http://localhost:3000",
+  issuer: "https://dev-29442551.okta.com/oauth2/default",
+  client_id: "0oa5crqexb5eIpqRf5d7",
+  client_secret: "MW57ln6s2O_WCsaDfJ0XK14v5cKRkb-v3Bv38PqJ",
+  scope: "openid profile",
+  routes: {
+    login: {
+      path: "/users/login"
+    },
+    loginCallback: {
+      afterCallback: "/dashboard"
+    }
+  }
+});
 
-// catch 404 and forward to error handler
+app.use(session({
+  secret: "nfxdrtyuohg-tenlasjndyyyjmecad--ouio",
+  resave: true,
+  saveUninitialized: false
+}));
+
+app.use(oidc.router);
+
+app.use((req, res, next) => {
+  if (!req.userContext) {
+    return next();
+  }
+
+  auth.client.getUser(req.userContext.userinfo.sub)
+    .then(user => {
+      req.user = user;
+      res.locals.user = user;
+      next();
+    });
+});
+
+// Routes
+app.use("/", blogRouter);
+app.use("/users", usersRouter);
+
+// Error handlers
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
-// error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.locals.error = req.app.get("env") === "development" ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render("error");
 });
 
 module.exports = app;
