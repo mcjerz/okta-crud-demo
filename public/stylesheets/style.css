@@ -1,8 +1,56 @@
+
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+  margin: 2em;
+  background: linear-gradient(to top, #CFF, #FCC) no-repeat;
+  background-size:auto;
+}
+.nav {
+  float: right;
+}
+.row {
+  align-self: center;
+}
+.alert {
+  font-size: 1.1em;
+  background-color: #465160;
+  color: white;
+}
+.edit {
+  padding-left: 0;
 }
 
-a {
-  color: #00B7FF;
+.edit a {
+  text-decoration: underline;
+  color: #212529;
+  font-size: 1.5em;
+}
+
+.edit li {
+  list-style-type: none;
+  line-height: 2.5em;
+}
+
+.edit button {
+  float: right;
+}
+
+.delete {
+  margin-left: 1em;
+}
+
+.your-posts {
+  margin-top: 2em;
+}
+
+.hidden {
+  display: inline;
+}
+
+footer {
+  text-align: center;
+  font-style: italic;
+  margin-top: 1em;
 }
